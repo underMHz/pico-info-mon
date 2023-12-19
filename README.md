@@ -38,7 +38,7 @@ gifgif
 |:--|:--|:--|
 |`3V3`|`VCC`|`VCC`|
 |`GND`|`GND`|`GND`|
-|`GPIO26`||`SDA`||
+|`GPIO26`|`SDA`||
 |`GPIO27`|`SCL(SCK)`||
 |`GPIO28`||`DATA`|
 
