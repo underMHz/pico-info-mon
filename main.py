@@ -266,7 +266,7 @@ async def update_first_second_lines():
         # フレーム該当部分塗りつぶし（多重描写防止）
         oled.fill_rect (1, 1, 126, 8, 0)
         oled.fill_rect (40, 10, 16, 8, 0)
-        oled.fill_rect (96, 10, 16, 8, 0)
+        oled.fill_rect (96, 10, 32, 8, 0)
         
         # 温湿度取得用関数で各種変数を取得
         temperature, humidity, thi_value, judgement = get_dht22()
