@@ -50,4 +50,28 @@ gifgif
 
 WIP
 
+RASPBERRY PI PICO
+│  main.py
+│  PicoDHT22.py
+│  sh1106.py
+│
+├─lib
+│  ├─micropython_uasyncio-3.1.1.dist-info
+│  │      （略）
+│  │
+│  ├─micropython_uasyncio.core-2.3.dist-info
+│  │      （略）
+│  │
+│  ├─micropython_urequests-0.9.1.dist-info
+│  │      （略）
+│  │
+│  ├─uasyncio
+│  │      （略）
+│  │
+│  └─urequests
+│          （略）
+│
+└─misakifont
+        （略）
+        
 ----
