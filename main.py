@@ -74,7 +74,7 @@ wlan.connect(ssid, password)
 boot_str = '起動中…'
 show_text(boot_str, 0, 8, 1)
 show_text(ssid, 0, 24, 1)
-show_text(password, 0, 32, 1)
+show_text(password, 0, 31, 1)
 
 # 接続確立まで待機
 max_wait = 10
