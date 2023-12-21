@@ -13,23 +13,23 @@ from misakifont import MisakiFont
 # OLED
 #	GND -> GND
 #	VCC -> 3.3V
-#	SCK -> GPIO 27 (SCK=SCL) I2C1  (Line 43)
-#	SDA -> GPIO 26                 (Line 44)
+#	SCK -> GPIO 27 (SCK=SCL) I2C1
+#	SDA -> GPIO 26
 ####################
 
 ####################
 #	DHT22
 #	VCC -> 3.3V
-#	SDA -> GPIO 28                 (Line 149)
+#	SDA -> GPIO 28
 #	GND -> GND
 ####################
 
 ####################
 #	以下は各自で入力
-#	ssid = 'YOUR-SSID'                (Line 66)
-#	password = 'YOUR-PASSWORD'        (Line 67)
-#	location_id = 'YOUR-LOCATION-ID'  (Line 191)
-#	news_api_key = 'YOUR-API-KEY'     (Line 228)
+#	ssid = 'YOUR-SSID'
+#	password = 'YOUR-PASSWORD'
+#	location_id = 'YOUR-LOCATION-ID'
+#	news_api_key = 'YOUR-API-KEY'
 ####################
 '''
 フォントの設定
@@ -136,14 +136,29 @@ def show_text_scroll(text, x, y, fsize, scroll_speed):
 
 # 日付を取得
 def get_formatted_time():
-    current_time = utime.localtime()
-    formatted_time = '{:d}月{:d}日({}){:02d}:{:02d}'.format(
-        current_time[1], current_time[2], 
-        ('月', '火', '水', '木', '金', '土', '日')[current_time[6]], 
-        current_time[3], current_time[4]
-    )
-    return formatted_time
+    # Wi-Fiに接続
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    if not wlan.isconnected():
+        print("Connecting to WiFi...")
+        wlan.connect(SSID, PASSWORD)
+        while not wlan.isconnected():
+            pass
+        formatted_time = '時刻が取得できません。'
+        return formatted_time
 
+    # NTPサーバーに接続
+    ntptime.host = "ntp.nict.jp"
+    ntptime.settime()
+    
+    DAYS = ["月", "火", "水", "木", "金", "土", "日"]
+
+    # 取得した時刻を表示
+    current_time = utime.localtime()
+    month, day, weekday, hours, minutes = current_time[1], current_time[2], current_time[6], current_time[3], current_time[4]
+    formatted_time = "{:02d}月{:02d}日（{}）{:02d}:{:02d}".format(month, day, DAYS[weekday], hours, minutes)
+    return formatted_time
+    
 # 温湿度を取得
 def get_dht22():
     # DHT22センサのピン番号
