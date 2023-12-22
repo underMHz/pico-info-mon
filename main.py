@@ -136,27 +136,16 @@ def show_text_scroll(text, x, y, fsize, scroll_speed):
 
 # 日付を取得
 def get_formatted_time():
-    # Wi-Fiに接続
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    if not wlan.isconnected():
-        print("Connecting to WiFi...")
-        wlan.connect(SSID, PASSWORD)
-        while not wlan.isconnected():
-            pass
-        formatted_time = '時刻が取得できません。'
-        return formatted_time
-
-    # NTPサーバーに接続
-    ntptime.host = "ntp.nict.jp"
-    ntptime.settime()
+    
+    t = ntptime.time()
+    t = t + 9 * 60 * 60
+    current_time = utime.localtime(t)
     
     DAYS = ["月", "火", "水", "木", "金", "土", "日"]
-
-    # 取得した時刻を表示
-    current_time = utime.localtime()
+    
     month, day, weekday, hours, minutes = current_time[1], current_time[2], current_time[6], current_time[3], current_time[4]
     formatted_time = "{:02d}月{:02d}日（{}）{:02d}:{:02d}".format(month, day, DAYS[weekday], hours, minutes)
+    
     return formatted_time
     
 # 温湿度を取得
