@@ -31,6 +31,7 @@ from misakifont import MisakiFont
 #	location_id = 'YOUR-LOCATION-ID'
 #	news_api_key = 'YOUR-API-KEY'
 ####################
+
 '''
 フォントの設定
 '''
@@ -71,34 +72,34 @@ wlan.active(True)
 wlan.connect(ssid, password)
 
 # 起動メッセージ
-boot_str = '起動中…'
-show_text(boot_str, 0, 8, 1)
-show_text(ssid, 0, 24, 1)
-show_text(password, 0, 31, 1)
+boot_str = '起動中'
+show_text(boot_str, 0, 0, 2)
+oled.hline(0, 15, 128, 1)
+show_text(ssid, 0, 16, 1)
+show_text(password, 0, 24, 1)
 
-# 接続確立まで待機
+# 接続確立までループ
 max_wait = 10
+
 while max_wait > 0:
     if wlan.status() < 0 or wlan.status() >= 3:
         break
     max_wait -= 1
     wait_str = 'WiFi接続中…'
-    show_text(wait_str, 0, 48, 1)
+    show_text(wait_str, 0, 36, 1)
     print(wait_str)
     utime.sleep(1)
     
-# 基板上のLED点滅用関数
-def blink_onboard_led(num_blinks):
-    led = machine.Pin('LED', machine.Pin.OUT)
-    for i in range(num_blinks):
-        led.on()
-        utime.sleep(.2)
-        led.off()
-        utime.sleep(.2)
-
 wlan_status = wlan.status()
-blink_onboard_led(wlan_status)
 print('Status code:' +str(wlan_status))
+
+# Statusコードに応じて基板上のLED点滅
+led = machine.Pin('LED', machine.Pin.OUT)
+for i in range(wlan_status):
+    led.on()
+    utime.sleep(.2)
+    led.off()
+    utime.sleep(.2)
 
 # Handle connection error
 # Error meanings
@@ -110,17 +111,29 @@ print('Status code:' +str(wlan_status))
 # -2 Link NoNet
 # -3 Link BadAuth
 
-if wlan_status != 3:
-    status_str = '×NG：再起動してください'
-    show_text(status_str, 0, 56, 1)
-    raise RuntimeError('Wi-Fi connection failed')
-else:
-    print('Connected')
-    status = wlan.ifconfig()
-    print('ip = ' + status[0])
+status = wlan.ifconfig()
+print('ip = ' + status[0])
+
+if wlan_status ==3:
     status_str = '◎OK：起動します。'
+    show_text(status_str, 0, 48, 1)
+    for i in range(3):
+        x_pos = 48 + 16 * i
+        loading_point = '・'
+        show_text(loading_point, x_pos, 0, 2)
+        utime.sleep(0.5)
+
+else:
+    status_str = '×NG：再起動してください'
+    show_text(status_str, 0, 48, 1)
+    status_str = '●一部の機能が制限されます！'
     show_text(status_str, 0, 56, 1)
-    utime.sleep(3)
+    for i in range(3):
+        x_pos = 48 + 16 * i
+        loading_point = '・'
+        show_text(loading_point, x_pos, 0, 2)
+        utime.sleep(0.5)
+    utime.sleep(2)
 
 #画面初期化
 oled.fill(0)
@@ -136,34 +149,29 @@ def show_text_scroll(text, x, y, fsize, scroll_speed):
 
 # 日付を取得
 def get_formatted_time():
+    try:
+        t = ntptime.time()
+        t = t + 9 * 60 * 60
+        current_time = utime.localtime(t)
+        
+        DAYS = ["月", "火", "水", "木", "金", "土", "日"]
+        
+        month, day, weekday, hours, minutes = current_time[1], current_time[2], current_time[6], current_time[3], current_time[4]
+        formatted_time = "{:02d}月{:02d}日（{}）{:02d}:{:02d}".format(month, day, DAYS[weekday], hours, minutes)
+        return formatted_time
     
-    t = ntptime.time()
-    t = t + 9 * 60 * 60
-    current_time = utime.localtime(t)
-    
-    DAYS = ["月", "火", "水", "木", "金", "土", "日"]
-    
-    month, day, weekday, hours, minutes = current_time[1], current_time[2], current_time[6], current_time[3], current_time[4]
-    formatted_time = "{:02d}月{:02d}日（{}）{:02d}:{:02d}".format(month, day, DAYS[weekday], hours, minutes)
-    
-    return formatted_time
-    
+    except Exception as e:
+        formatted_time = '時間が取得できません。'
+        return formatted_time
+
 # 温湿度を取得
 def get_dht22():
-    # DHT22センサのピン番号
-    dht_pin = 28
-    dht22 = PicoDHT22(Pin(dht_pin,Pin.IN,Pin.PULL_UP))
-
-    # 温湿度の取得
-    temperature, humidity = dht22.read()
-
-    if temperature is None:
-        temperature = '??'
-        humidity = '??'
-        thi_value = '??'
-        judgement = '??'
-        
-    else:
+    try:
+        # DHT22センサのピン番号
+        dht_pin = 28
+        dht22 = PicoDHT22(Pin(dht_pin,Pin.IN,Pin.PULL_UP))
+        # 温湿度の取得
+        temperature, humidity = dht22.read()
         # 不快指数THIの計算
         thi_value = 0.81 * temperature + 0.01 * humidity * (0.99 * temperature - 14.3) + 46.3
         # 判定
@@ -183,23 +191,29 @@ def get_dht22():
             judgement = '暑い'
         else:
             judgement = '特に暑い'
-            
         thi_value = int(thi_value)
-        
-    return temperature, humidity, thi_value, judgement
+        return temperature, humidity, thi_value, judgement
+    
+    except Exception as e:
+        temperature = '??'
+        humidity = '??'
+        thi_value = '??'
+        judgement = '??'
+        return temperature, humidity, thi_value, judgement
+
     
 # 天気予報の取得（API）https://weather.tsukumijima.net/
 def get_weather_data():
-    weather_url = 'https://weather.tsukumijima.net/api/forecast'
-    # location_idは次から取得する（例えば名古屋の天気なら230010） https://weather.tsukumijima.net/primary_area.xml
-    location_id = 'YOUR-LOCATION-ID' 
-    weather_url_with_id = '{}?city={}'.format(weather_url, location_id)
+    try:
+        weather_url = 'https://weather.tsukumijima.net/api/forecast'
+        # location_idは次から取得する（例えば名古屋の天気なら230010） https://weather.tsukumijima.net/primary_area.xml
+        location_id = 'YOUR-LOCATION-ID' 
+        weather_url_with_id = '{}?city={}'.format(weather_url, location_id)
 
-    response = urequests.get(weather_url_with_id)
-    weather_data = response.json()
-    response.close()
+        response = urequests.get(weather_url_with_id)
+        weather_data = response.json()
+        response.close()
 
-    if response.status_code == 200:
         # たまにNullが返ってくるので、Nullを「？」表示にする関数
         def handle_null(value):
             return '？' if value is None else str(value)
@@ -217,48 +231,43 @@ def get_weather_data():
         #美咲フォントに「曇」という文字がないため、「雲」という文字に置き換え
         tomorrow_max_temp = handle_null(weather_data['forecasts'][1]['temperature']['max']['celsius'])
         tomorrow_min_temp = handle_null(weather_data['forecasts'][1]['temperature']['min']['celsius'])
+        return today_weather, today_max_temp, today_min_temp, tomorrow_weather, tomorrow_max_temp, tomorrow_min_temp
         
-    else:
+    except Exception as e:
         # サーバーから返って来なかった場合
         today_weather, today_max_temp, today_min_temp = '？', '？', '？'
         tomorrow_weather, tomorrow_max_temp, tomorrow_min_temp = '？', '？', '？'
-        
-    return today_weather, today_max_temp, today_min_temp, tomorrow_weather, tomorrow_max_temp, tomorrow_min_temp
+        return today_weather, today_max_temp, today_min_temp, tomorrow_weather, tomorrow_max_temp, tomorrow_min_temp
 
 # ニュースの取得（API）https://newsapi.org/
 def get_news_data():
-    news_url = 'https://newsapi.org/v2/top-headlines'
-    # API Keyは次から取得できる（要登録。メアドのみで無料）。 https://newsapi.org/
-    news_api_key = 'YOUR-API-KEY'
-    country = 'jp'
-    # 返答が多いとメモリが圧迫されるのでNHKのニュースのみに絞る
-    query = 'nhk.or.jp'
+    try:
+        news_url = 'https://newsapi.org/v2/top-headlines'
+        # API Keyは次から取得できる（要登録。メアドのみで無料）。 https://newsapi.org/
+        news_api_key = 'YOUR-API-KEY'
+        country = 'jp'
+        query = 'nhk.or.jp'
 
-    # リクエストヘッダーの設定（User-Agentを設定しないとなぜか怒られる。名前はなんでもよさそう）
-    headers = {'User-Agent': 'hogehoge'}
-    # リクエストパラメータの設定
-    params = '?country={}&apiKey={}&q={}'.format(country, news_api_key, query)
-    response = urequests.get(news_url + params, headers=headers)
-    news_data = response.json()
-    response.close()
-    
-    if response.status_code == 200:
-        if not news_data or not news_data['articles']:
-            output_article = 'ニュースを取得しています。'
-        else:
-            output_article = news_data['articles'][0]['title'] + ' = ' + news_data['articles'][0]['description']
+        # リクエストヘッダーの設定（User-Agentを設定しないとなぜか怒られる。名前はなんでもよさそう）
+        headers = {'User-Agent': 'hogehoge'}
+        # リクエストパラメータの設定
+        params = '?country={}&apiKey={}&q={}'.format(country, news_api_key, query)
+        response = urequests.get(news_url + params, headers=headers)
+        news_data = response.json()
+        response.close()
+        
+        output_article = news_data['articles'][0]['title'] + ' = ' + news_data['articles'][0]['description']
+        return output_article
 
-    else:
-        output_article = 'サーバエラーが起きている可能性があります。'
-    print(output_article)
-    return output_article
+    except Exception as e:
+        output_article = 'WiFiの接続不具合もしくはサーバエラーが起きている可能性があります。'
+        return output_article
 
 '''
 予め表示しておく部分
 '''
 # 1～2行目を囲うフレームを描画
 oled.rect(0, 0, 128, 27, 1)
-# 描写が変わらない部分（2行目）
 pre_str = '不快指数：　　　●状態：　　'
 show_text(pre_str, x=0, y=10, fsize=1)
 
@@ -270,7 +279,7 @@ async def update_first_second_lines():
         # フレーム該当部分塗りつぶし（多重描写防止）
         oled.fill_rect (1, 1, 126, 8, 0)
         oled.fill_rect (40, 10, 16, 8, 0)
-        oled.fill_rect (96, 10, 32, 8, 0)
+        oled.fill_rect (96, 10, 31, 8, 0)
         
         # 温湿度取得用関数で各種変数を取得
         temperature, humidity, thi_value, judgement = get_dht22()
@@ -294,7 +303,6 @@ async def update_first_second_lines():
         
 async def update_third_lines():
     while True:
-        
         # フレーム該当部分塗りつぶし（多重描写防止）
         oled.fill_rect (1, 18, 126, 8, 0)
         
@@ -311,7 +319,7 @@ async def update_third_lines():
         str3 = '{}'.format(get_formatted_time())
         show_text(str3, x, y, fsize)
         
-        await asyncio.sleep(1)  # 5秒ごとに更新
+        await asyncio.sleep(5)  # 5秒ごとに更新
         
 async def update_fourth_fifth_lines():
     while True:
@@ -372,7 +380,6 @@ async def update_last_line():
         wait_str = 'ニュース取得中…'
         show_text(wait_str, 0, y, fsize)
 
-# 非同期処理
 async def main():
     asyncio.create_task(update_first_second_lines())
     asyncio.create_task(update_third_lines())
@@ -383,3 +390,4 @@ async def main():
         await asyncio.sleep(1)  # メインループが終わらないように
 
 asyncio.run(main())
+
