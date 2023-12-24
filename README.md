@@ -75,7 +75,7 @@ https://github.com/danjperron/PicoDHT22/blob/main/PicoDHT22.py
 `misakifont`（美咲フォント）
 https://github.com/Tamakichi/pico_MicroPython_misakifont/tree/main/misakifont
 
-？美咲フォントについて
+❓美咲フォントについて
 https://littlelimit.net/misaki.htm
 
 RASPBERRY PI PICO<br>
