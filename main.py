@@ -323,6 +323,9 @@ async def update_third_lines():
         
 async def update_fourth_fifth_lines():
     while True:
+        # フレーム該当部分塗りつぶし（多重描写防止）
+        oled.fill_rect (0, 28, 128, 16, 0)
+        
         # 天気予報用関数で各種変数を取得
         today_weather, today_max_temp, today_min_temp, tomorrow_weather, tomorrow_max_temp, tomorrow_min_temp = get_weather_data()
         
