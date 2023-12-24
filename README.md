@@ -8,15 +8,23 @@ DHT22を使って温度と湿度、不快指数を取得します。また、API
 
 ----
 
+## 開発環境
+
+・MicroPython(v1.20.0)
+
+・Thonny(v4.1.4)
+
+----
+
 ## 作例
 
-gifgif
+![動作](img/example.gif)
 
 実際の動作の様子です。
 
-3Dプリンタ等で筐体を作ると良いかと思います。
+筐体は3Dプリンタ（光造形）で作製しています。
 
-もし作ったら後ほどアップします。
+STLファイルは[case.stl](https://github.com/underMHz/pico-info-mon/blob/main/case.stl)にあります。
 
 ----
 
@@ -42,13 +50,33 @@ gifgif
 |`GPIO27`|`SCL(SCK)`||
 |`GPIO28`||`DATA`|
 
-ピンアサインの画像ピンアサインの画像ピンアサインの画像
+![ピンアサイン](img/picow_pin.png)
 
 ----
 
 ## ファイル構成
 
-WIP
+- ThonnyからPython Package Index(PyPI)からインストールするライブラリ
+
+`micropython_uasyncio`
+
+`micropython_urequests`
+
+- 外部でインストールしてから追加するライブラリ
+
+`sh1106.py`
+https://github.com/robert-hh/SH1106/blob/master/sh1106.py
+
+`PicoDHT22.py`
+https://github.com/danjperron/PicoDHT22/blob/main/PicoDHT22.py
+
+- 使用するフォント
+
+`misakifont`（美咲フォント）
+https://github.com/Tamakichi/pico_MicroPython_misakifont/tree/main/misakifont
+
+？美咲フォントについて
+https://littlelimit.net/misaki.htm
 
 RASPBERRY PI PICO<br>
 │&nbsp;&nbsp;main.py<br>
